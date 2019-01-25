@@ -73,11 +73,17 @@ CODE
 
 run 'rm -rf test/'
 
+# Remove Turbolinks and CoffeeScript from Gemfile
+
+run "sed -i '' '/turbolinks/d' ./Gemfile"
+run "sed -i '' '/coffee/d' ./Gemfile"
+
 # AFTER INITIAL PROJECT SETUP
 
 after_bundle do
   # ______ Install things _______
-  # rails_command 'haml:erb2haml' # Setting HAML_RAILS_DELETE_ERB=true does not have an effect, it will still prompt
+  rails_command 'haml:erb2haml' # Setting HAML_RAILS_DELETE_ERB=true does not have an effect, it will still prompt
+
   run 'spring stop'
   rails_command 'generate rspec:install'
 
@@ -85,9 +91,8 @@ after_bundle do
   run 'echo "--format documentation" >> .rspec'
 
   IO.write('spec/rails_helper.rb', File.open('spec/rails_helper.rb') do |f|
-      f.read.gsub('# Dir[Rails.root.join(\'spec\', \'support\', \'**\', \'*.rb\')].each { |f| require f }', 'Dir[Rails.root.join(\'spec\', \'support\', \'**\', \'*.rb\')].each { |f| require f }')
-    end
-  )
+                                     f.read.gsub('# Dir[Rails.root.join(\'spec\', \'support\', \'**\', \'*.rb\')].each { |f| require f }', 'Dir[Rails.root.join(\'spec\', \'support\', \'**\', \'*.rb\')].each { |f| require f }')
+                                   end)
 
   # ______ Configure factory bot _______
   file 'spec/support/factory_bot.rb', <<-'CODE'
@@ -135,7 +140,6 @@ Capybara::Screenshot.register_driver(:headless_chrome) do |driver, path|
 end
   CODE
 
-
   # ______ Configure site prism _______
   file 'spec/support/site_prism.rb', <<-'CODE'
 require 'site_prism'
@@ -175,6 +179,14 @@ VCR.configure do |config|
   }
 end
   CODE
+
+  # ______ Remove Turbolinks  _______
+  run "sed -i '' '/turbolinks/d' ./app/assets/javascripts/application.js"
+
+  main_view = 'app/views/layouts/application.html.haml'
+  IO.write(main_view, File.open(main_view) do |f|
+                        f.read.gsub(", 'data-turbolinks-track': 'reload'", '')
+                      end)
 
   # ______ Configure git and commit  _______
   git :init
