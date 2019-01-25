@@ -8,6 +8,7 @@ gem_group :test do
   gem 'selenium-webdriver'
   gem 'site_prism'
   gem 'vcr'
+  gem 'webmock'
 end
 
 gem_group :development, :test do
@@ -75,12 +76,18 @@ run 'rm -rf test/'
 # AFTER INITIAL PROJECT SETUP
 
 after_bundle do
-  rails_command 'haml:erb2haml' # Setting HAML_RAILS_DELETE_ERB=true does not have an effect, it will still prompt
-
-  # rails_command 'generate rspec:install'
+  # ______ Install things _______
+  # rails_command 'haml:erb2haml' # Setting HAML_RAILS_DELETE_ERB=true does not have an effect, it will still prompt
+  run 'spring stop'
+  rails_command 'generate rspec:install'
 
   # ______ Configure Rspec _______
-  # run 'echo "--format documentation" >> .rspec'
+  run 'echo "--format documentation" >> .rspec'
+
+  IO.write('spec/rails_helper.rb', File.open('spec/rails_helper.rb') do |f|
+      f.read.gsub('# Dir[Rails.root.join(\'spec\', \'support\', \'**\', \'*.rb\')].each { |f| require f }', 'Dir[Rails.root.join(\'spec\', \'support\', \'**\', \'*.rb\')].each { |f| require f }')
+    end
+  )
 
   # ______ Configure factory bot _______
   file 'spec/support/factory_bot.rb', <<-'CODE'
@@ -96,6 +103,7 @@ end
   # ______ Configure capybara _______
 
   file 'spec/support/capybara.rb', <<-'CODE'
+require 'selenium/webdriver'
 require 'capybara'
 require 'capybara/rspec'
 
@@ -152,6 +160,7 @@ end
 
   # ______ Configure VCR _______
   file 'spec/support/vcr.rb', <<-'CODE'
+require 'webmock/rspec'
 require 'vcr'
 
 VCR.configure do |config|
