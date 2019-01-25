@@ -17,6 +17,7 @@ gem_group :development, :test do
 end
 
 gem 'sprockets-es6'
+gem 'jquery-rails', '~> 4.3', '>= 4.3.3'
 gem 'foundation-rails'
 gem 'autoprefixer-rails'
 gem 'sass-rails', '~> 5.0'
@@ -192,6 +193,8 @@ end
 
   # ______ Configure Foundation  _______
   rails_command 'g foundation:install'
+
+  # ______ Configure Foundation CSS  _______
   run 'rm app/assets/stylesheets/application.css'
   file 'app/assets/stylesheets/application.scss', <<-CODE
 // Foundation
@@ -202,7 +205,7 @@ end
 
   CODE
 
-  file 'app/assets/stylesheets/mixins/_bem.scss',<<-'CODE'
+  file 'app/assets/stylesheets/mixins/_bem.scss', <<-'CODE'
 // Block Element
 @mixin element($element) {
   &__#{$element} {
@@ -216,6 +219,17 @@ end
     @content;
   }
 }
+  CODE
+
+  # ______ Configure Foundation JS  _______
+  run 'rm app/assets/javascripts/application.js'
+  file 'app/assets/javascripts/application.js', <<-CODE
+//= require jquery
+//= require activestorage
+//= require foundation
+//= require_tree .
+
+$(function(){ $(document).foundation(); });
   CODE
 
   # ______ Configure git and commit  _______
