@@ -18,6 +18,8 @@ end
 
 gem 'sprockets-es6'
 gem 'foundation-rails'
+gem 'autoprefixer-rails'
+gem 'sass-rails', '~> 5.0'
 gem 'haml-rails'
 
 # TRAVIS
@@ -187,6 +189,34 @@ end
   IO.write(main_view, File.open(main_view) do |f|
                         f.read.gsub(", 'data-turbolinks-track': 'reload'", '')
                       end)
+
+  # ______ Configure Foundation  _______
+  rails_command 'g foundation:install'
+  run 'rm app/assets/stylesheets/application.css'
+  file 'app/assets/stylesheets/application.scss', <<-CODE
+// Foundation
+@import 'foundation_and_overrides';
+
+// Mixins
+@import 'mixins/bem';
+
+  CODE
+
+  file 'app/assets/stylesheets/mixins/_bem.scss',<<-'CODE'
+// Block Element
+@mixin element($element) {
+  &__#{$element} {
+    @content;
+  }
+}
+
+// Block Modifier
+@mixin modifier($modifier) {
+  &--#{$modifier} {
+    @content;
+  }
+}
+  CODE
 
   # ______ Configure git and commit  _______
   git :init
