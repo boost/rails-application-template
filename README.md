@@ -1,10 +1,12 @@
-# Rails Application Template
+# Boost Rails Application Template
+
+## Setup
 
 To set up a new project:
 ```ruby
-rails new project-name -m path/to/template.rb
+rails new project_name -m path/to/template.rb
 # OR
-rails new project-name -m https://github.com/boost/rails-application-template/blob/master/template.rb
+rails new project_name -m https://github.com/boost/rails-application-template/blob/master/template.rb
 ```
 
 To apply to an existing project:
@@ -12,20 +14,23 @@ To apply to an existing project:
 bin/rails app:template LOCATION=path/to/template.rb
 ```
 
-* Rails Guides: [Rails Application Templates](https://guides.rubyonrails.org/rails_application_templates.html)
-
+## Features
 
 This template does the following:
 
-  - Install GEMS WE LOVE
-  - Basic Travis configuration
-  - Configures The Rubocop
-  - Remove Turbolinks and CoffeeScript from Gemfile, and from views
-  - Convert to HAML
-  - Configure Rspec
-    - Configure factory bot
-    - Configure capybara
-    - Configure capybara screenshot
-    - Configure site prism
-    - Configure VCR
-  - Install and configure Foundation
+- Install GEMS WE LOVE
+- Basic Travis configuration
+- Configure the Rubocop
+- Remove Turbolinks and CoffeeScript from Gemfile, and from views
+- Convert ERB to HAML
+- Configure Rspec
+  - Configure Factory Bot
+  - Configure Capybara
+  - Configure Capybara screenshot
+  - Configure Site Prism
+  - Configure VCR
+- Install and configure Foundation
+
+## Reference
+
+* Rails Guides: [Rails Application Templates](https://guides.rubyonrails.org/rails_application_templates.html)

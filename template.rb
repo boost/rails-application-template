@@ -1,6 +1,6 @@
 vcr = yes? 'Install VCR?'
-foundation =  yes? 'Install Foundation?'
-# foundation = ask "Install and configure Foundation?"
+foundation = yes? 'Install Foundation?'
+
 # ______ GEMS WE LOVE _______
 
 gem_group :test do
