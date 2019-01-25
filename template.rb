@@ -1,3 +1,6 @@
+vcr = yes? 'Install VCR?'
+foundation =  yes? 'Install Foundation?'
+# foundation = ask "Install and configure Foundation?"
 # ______ GEMS WE LOVE _______
 
 gem_group :test do
@@ -7,8 +10,8 @@ gem_group :test do
   gem 'factory_bot_rails'
   gem 'selenium-webdriver'
   gem 'site_prism'
-  gem 'vcr'
-  gem 'webmock'
+  gem 'vcr' if vcr
+  gem 'webmock' if vcr
 end
 
 gem_group :development, :test do
@@ -16,11 +19,14 @@ gem_group :development, :test do
   gem 'rspec-rails', '~> 3.8'
 end
 
-gem 'sprockets-es6'
-gem 'jquery-rails', '~> 4.3', '>= 4.3.3'
-gem 'foundation-rails'
-gem 'autoprefixer-rails'
-gem 'sass-rails', '~> 5.0'
+if foundation
+  gem 'sprockets-es6'
+  gem 'jquery-rails', '~> 4.3', '>= 4.3.3'
+  gem 'foundation-rails'
+  gem 'autoprefixer-rails'
+  gem 'sass-rails', '~> 5.0'
+end
+
 gem 'haml-rails'
 
 # ______ Travis _______
@@ -158,7 +164,8 @@ end
   CODE
 
   # ______ Configure VCR _______
-  file 'spec/support/vcr.rb', <<-'CODE'
+  if vcr
+    file 'spec/support/vcr.rb', <<-'CODE'
 require 'webmock/rspec'
 require 'vcr'
 
@@ -174,6 +181,7 @@ VCR.configure do |config|
   }
 end
   CODE
+end
 
   # ______ Remove Turbolinks From Views  _______
   run "sed -i '' '/turbolinks/d' ./app/assets/javascripts/application.js"
@@ -183,12 +191,13 @@ end
                         f.read.gsub(", 'data-turbolinks-track': 'reload'", '')
                       end)
 
+  if foundation
   # ______ Install Foundation  _______
-  rails_command 'g foundation:install'
+    rails_command 'g foundation:install'
 
   # ______ Configure Foundation CSS  _______
-  run 'rm app/assets/stylesheets/application.css'
-  file 'app/assets/stylesheets/application.scss', <<-CODE
+    run 'rm app/assets/stylesheets/application.css'
+    file 'app/assets/stylesheets/application.scss', <<-CODE
 // Foundation
 @import 'foundation_and_overrides';
 
@@ -197,7 +206,7 @@ end
 
   CODE
 
-  file 'app/assets/stylesheets/mixins/_bem.scss', <<-'CODE'
+    file 'app/assets/stylesheets/mixins/_bem.scss', <<-'CODE'
 // Block Element
 @mixin element($element) {
   &__#{$element} {
@@ -223,6 +232,7 @@ end
 
 $(function(){ $(document).foundation(); });
   CODE
+end
 
   # ______ Configure git and commit  _______
   git :init
