@@ -1,4 +1,4 @@
-# GEMS
+# ______ GEMS WE LOVE _______
 
 gem_group :test do
   gem 'capybara'
@@ -23,7 +23,7 @@ gem 'autoprefixer-rails'
 gem 'sass-rails', '~> 5.0'
 gem 'haml-rails'
 
-# TRAVIS
+# ______ Travis _______
 
 file '.travis.yaml', <<-CODE
 sudo: required
@@ -50,7 +50,7 @@ include:
 
 CODE
 
-# RUBOCOP
+# ______ The cop _______
 
 file '.rubocop.yaml', <<-CODE
 AllCops:
@@ -72,25 +72,19 @@ Metrics/AbcSize:
 
 CODE
 
-# DELETE MINITEST
-
-run 'rm -rf test/'
-
-# Remove Turbolinks and CoffeeScript from Gemfile
-
+# ______ Remove Turbolinks and CoffeeScript from Gemfile _______
 run "sed -i '' '/turbolinks/d' ./Gemfile"
 run "sed -i '' '/coffee/d' ./Gemfile"
 
-# AFTER INITIAL PROJECT SETUP
-
+# ______ Configure installed gems _______
 after_bundle do
-  # ______ Install things _______
+  # ______ Convert to HAML _______
   rails_command 'haml:erb2haml' # Setting HAML_RAILS_DELETE_ERB=true does not have an effect, it will still prompt
 
+  # ______ Configure Rspec _______
   run 'spring stop'
   rails_command 'generate rspec:install'
-
-  # ______ Configure Rspec _______
+  run 'rm -rf test/'
   run 'echo "--format documentation" >> .rspec'
 
   IO.write('spec/rails_helper.rb', File.open('spec/rails_helper.rb') do |f|
@@ -99,8 +93,6 @@ after_bundle do
 
   # ______ Configure factory bot _______
   file 'spec/support/factory_bot.rb', <<-'CODE'
-# frozen_string_literal: true
-
 require 'factory_bot_rails'
 
 RSpec.configure do |config|
@@ -183,7 +175,7 @@ VCR.configure do |config|
 end
   CODE
 
-  # ______ Remove Turbolinks  _______
+  # ______ Remove Turbolinks From Views  _______
   run "sed -i '' '/turbolinks/d' ./app/assets/javascripts/application.js"
 
   main_view = 'app/views/layouts/application.html.haml'
@@ -191,7 +183,7 @@ end
                         f.read.gsub(", 'data-turbolinks-track': 'reload'", '')
                       end)
 
-  # ______ Configure Foundation  _______
+  # ______ Install Foundation  _______
   rails_command 'g foundation:install'
 
   # ______ Configure Foundation CSS  _______
