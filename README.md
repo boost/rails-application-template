@@ -6,7 +6,7 @@ To set up a new project:
 ```ruby
 rails new project_name -m path/to/template.rb
 # OR
-rails new project_name -m https://github.com/boost/rails-application-template/blob/master/template.rb
+rails new project_name -m https://raw.githubusercontent.com/boost/rails-application-template/master/template.rb
 ```
 
 To apply to an existing project:
