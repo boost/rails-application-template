@@ -58,7 +58,7 @@ CODE
 
 # ______ The cop _______
 
-file '.rubocop.yaml', <<-CODE
+file '.rubocop.yml', <<-CODE
 AllCops:
   Exclude:
   - 'Gemfile'
@@ -86,16 +86,19 @@ run "sed -i '' '/coffee/d' ./Gemfile"
 after_bundle do
   # ______ Convert to HAML _______
   rails_command 'haml:erb2haml' # Setting HAML_RAILS_DELETE_ERB=true does not have an effect, it will still prompt
-
+  
   # ______ Configure Rspec _______
   run 'spring stop'
   rails_command 'generate rspec:install'
   run 'rm -rf test/'
   run 'echo "--format documentation" >> .rspec'
-
+  
   IO.write('spec/rails_helper.rb', File.open('spec/rails_helper.rb') do |f|
                                      f.read.gsub('# Dir[Rails.root.join(\'spec\', \'support\', \'**\', \'*.rb\')].each { |f| require f }', 'Dir[Rails.root.join(\'spec\', \'support\', \'**\', \'*.rb\')].each { |f| require f }')
                                    end)
+
+  # _____ Run rubocop _______
+  run 'rubocop -a'
 
   # ______ Configure factory bot _______
   file 'spec/support/factory_bot.rb', <<-'CODE'
