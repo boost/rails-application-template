@@ -17,6 +17,8 @@ end
 gem_group :development, :test do
   gem 'pry-rails'
   gem 'rspec-rails', '~> 3.8'
+  gem 'rubocop', '~> 0.68', require: false
+  gem 'boost-styles', git: 'git@github.com:boost/boost-styles.git', require: false
 end
 
 if foundation
@@ -59,22 +61,10 @@ CODE
 # ______ The cop _______
 
 file '.rubocop.yml', <<-CODE
-AllCops:
-  Exclude:
-  - 'Gemfile'
-  - 'bin/**/*'
-  - 'config/**/*'
-  - 'db/**/*'
-  - 'spec/**/**/**/*'
 
-Style/Documentation:
-  Enabled: false
-
-Metrics/LineLength:
-  Max: 120
-
-Metrics/AbcSize:
-  Max: 20
+inherit_gem: 
+  boost-styles:
+    - rubocop_default.yml
 
 CODE
 
