@@ -18,7 +18,7 @@ gem_group :development, :test do
   gem 'pry-rails'
   gem 'rspec-rails', '~> 3.8'
   gem 'rubocop', '~> 0.68', require: false
-  gem 'boost-styles', git: 'git@github.com:boost/boost-styles.git', require: false
+  gem 'boost-styles', git: 'https://github.com/boost/boost-styles.git', require: false
 end
 
 if foundation
