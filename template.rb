@@ -33,7 +33,7 @@ gem 'haml-rails'
 
 # ______ Travis _______
 
-file '.travis.yaml', <<-CODE
+file '.travis.yml', <<-CODE
 sudo: required
 
 language: ruby
