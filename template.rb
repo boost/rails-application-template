@@ -26,7 +26,6 @@ if foundation
   gem 'jquery-rails', '~> 4.3', '>= 4.3.3'
   gem 'foundation-rails'
   gem 'autoprefixer-rails'
-  gem 'sass-rails', '~> 5.0'
 end
 
 gem 'haml-rails'
