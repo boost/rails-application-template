@@ -1,14 +1,13 @@
-vcr = yes? 'Install VCR?'
-foundation = yes? 'Install Foundation?'
+vcr = yes? 'Do you want to install VCR?'
+foundation = yes? 'Do you want to install Foundation?'
+vue = yes? 'Do you want to installinstall Vue?'
 
 # ______ GEMS WE LOVE _______
 
 gem_group :test do
-  gem 'capybara'
   gem 'capybara-screenshot'
   gem 'chromedriver-helper'
   gem 'factory_bot_rails'
-  gem 'selenium-webdriver'
   gem 'site_prism'
   gem 'vcr' if vcr
   gem 'webmock' if vcr
@@ -16,7 +15,7 @@ end
 
 gem_group :development, :test do
   gem 'pry-rails'
-  gem 'rspec-rails', '~> 3.8'
+  gem 'rspec-rails', '~> 4.0.1'
   gem 'rubocop', '~> 0.68', require: false
   gem 'boost-styles', git: 'https://github.com/boost/boost-styles.git', require: false
 end
@@ -28,44 +27,8 @@ if foundation
   gem 'autoprefixer-rails'
 end
 
+# require gem
 gem 'haml-rails'
-
-# ______ Travis _______
-
-file '.travis.yml', <<-CODE
-sudo: required
-
-language: ruby
-
-stages:
-- lint
-- test
-
-addons:
-  chrome: stable
-
-cache: bundler
-
-jobs:
-include:
-  - stage: lint
-    script:
-      - rubocop
-  - stage: test
-    script:
-      - bundle exec rspec
-
-CODE
-
-# ______ The cop _______
-
-file '.rubocop.yml', <<-CODE
-
-inherit_gem: 
-  boost-styles:
-    - rubocop_default.yml
-
-CODE
 
 # ______ Remove Turbolinks and CoffeeScript from Gemfile _______
 run "sed -i '' '/turbolinks/d' ./Gemfile"
@@ -76,18 +39,97 @@ after_bundle do
   # ______ Convert to HAML _______
   rails_command 'haml:erb2haml' # Setting HAML_RAILS_DELETE_ERB=true does not have an effect, it will still prompt
   
+  # ______ install sass loader for webpacker
+  run 'npm i --save-dev node-sass sass-loader@10.2.0 style-loader'
+  run 'npm install'
+  run 'npm rebuild'
+
+  if vue
+  run 'npm i vue vue-loader vue-template-compiler'
+  file 'config/webpack/loaders/vue.js', <<-CODE
+module.exports = {
+  test: /\.vue(\.erb)?$/,
+  use: [{
+    loader: 'vue-loader',
+  }],
+};
+  CODE
+
+  file 'config/webpack/environment.js', <<-CODE
+const { environment } = require('@rails/webpacker');
+const { VueLoaderPlugin } = require('vue-loader');
+const vue = require('./loaders/vue');
+
+environment.plugins.prepend('VueLoaderPlugin', new VueLoaderPlugin());
+environment.loaders.prepend('vue', vue);
+
+const nodeModulesLoader = environment.loaders.get('nodeModules')
+if (!Array.isArray(nodeModulesLoader.exclude)) {
+  nodeModulesLoader.exclude = (nodeModulesLoader.exclude == null)
+    ? []
+    : [nodeModulesLoader.exclude]
+}
+nodeModulesLoader.exclude.push(/sanitize-html/)
+
+module.exports = environment;
+  CODE
+
+  file 'app/javascript/components/app.vue', <<-CODE
+<template>
+  <div id="app">
+    <p>{{ message }}</p>
+    <div class="">
+      {{count}} <button @click="increase">+</button>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  data: function () {
+    return {
+      message: "Hello Vue!",
+      count: 0
+    }
+  },
+  methods: {
+    increase () {
+      this.count++
+    }
+  }
+}
+</script>
+
+<style scoped>
+p {
+  font-size: 2em;
+  text-align: center;
+}
+</style>
+  CODE
+
+  file 'app/javascript/packs/app.js', <<-CODE
+import Vue from 'vue'
+import App from '../components/app.vue'
+
+document.body.appendChild(document.createElement('hello'))
+new Vue(App).$mount('hello')
+
+  CODE
+  end
+
+# ______ The cop _______
+  # rails_command 'generate boost_styles:install'
+
   # ______ Configure Rspec _______
-  run 'spring stop'
   rails_command 'generate rspec:install'
   run 'rm -rf test/'
   run 'echo "--format documentation" >> .rspec'
   
   IO.write('spec/rails_helper.rb', File.open('spec/rails_helper.rb') do |f|
-                                     f.read.gsub('# Dir[Rails.root.join(\'spec\', \'support\', \'**\', \'*.rb\')].each { |f| require f }', 'Dir[Rails.root.join(\'spec\', \'support\', \'**\', \'*.rb\')].each { |f| require f }')
-                                   end)
+    f.read.gsub('# Dir[Rails.root.join(\'spec\', \'support\', \'**\', \'*.rb\')].each { |f| require f }', 'Dir[Rails.root.join(\'spec\', \'support\', \'**\', \'*.rb\')].each { |f| require f }')
+  end)
 
-  # _____ Run rubocop _______
-  run 'rubocop -a'
 
   # ______ Configure factory bot _______
   file 'spec/support/factory_bot.rb', <<-'CODE'
@@ -175,9 +217,6 @@ end
   CODE
 end
 
-  # ______ Remove Turbolinks From Views  _______
-  run "sed -i '' '/turbolinks/d' ./app/assets/javascripts/application.js"
-
   main_view = 'app/views/layouts/application.html.haml'
   IO.write(main_view, File.open(main_view) do |f|
                         f.read.gsub(", 'data-turbolinks-track': 'reload'", '')
@@ -215,7 +254,7 @@ end
   CODE
 
   # ______ Configure Foundation JS  _______
-  run 'rm app/assets/javascripts/application.js'
+  # run 'rm app/assets/javascripts/application.js'
   file 'app/assets/javascripts/application.js', <<-CODE
 //= require jquery
 //= require activestorage
@@ -224,7 +263,138 @@ end
 
 $(function(){ $(document).foundation(); });
   CODE
+else
+
+# ______ Configure Foundation CSS  _______
+  run 'rm app/assets/stylesheets/application.css'
+  file 'app/assets/stylesheets/application.scss', <<-CODE
+
+// Mixins
+@import 'mixins/bem';
+CODE
+
+  file 'app/assets/stylesheets/mixins/_bem.scss', <<-'CODE'
+// Block Element
+@mixin element($element) {
+  &__#{$element} {
+    @content;
+  }
+}
+
+// Block Modifier
+@mixin modifier($modifier) {
+  &--#{$modifier} {
+    @content;
+  }
+}
+  CODE
+
+  # ______ Configure  JS  _______
+  # run 'rm app/assets/javascripts/application.js'
+  file 'app/assets/javascripts/application.js', <<-CODE
+//= require_tree .
+  CODE
 end
+
+  # ______ Configure SASS with webpacker JS  _____
+  run 'rm app/javascript/packs/application.js'
+  file 'app/javascript/packs/application.js', <<-CODE
+import * as ActiveStorage from "@rails/activestorage"
+import "channels"
+import './application.scss';
+
+ActiveStorage.start()
+  CODE
+
+  file 'app/javascript/packs/application.scss', <<-CODE
+@import '../../assets/stylesheets/mixins/bem.scss';
+  CODE
+
+  # ______ Configure Foundation JS  _______
+  run 'rm app/views/layouts/application.html.haml'
+  file 'app/views/layouts/application.html.haml', <<-CODE
+!!!
+%html
+  %head
+    %meta{:content => "text/html; charset=UTF-8", "http-equiv" => "Content-Type"}/
+    %title
+    %meta{:content => "width=device-width,initial-scale=1", :name => "viewport"}/
+    = csrf_meta_tags
+    = csp_meta_tag
+    = stylesheet_link_tag 'application', media: 'all'
+    = javascript_pack_tag 'application'
+    = stylesheet_pack_tag 'application'
+  %body
+    = yield
+    .container__test
+      test
+  CODE
+
+  #_______ DB prepare ______
+  rails_command 'db:prepare'
+
+  #_______ github test ______
+
+  file '.github/workflows/test.yml', <<-CODE
+  
+name: Tests
+on: pull_request
+
+jobs:
+  test_ruby_units:
+    runs-on: self-hosted
+
+    services:
+      mysql:
+        image: mysql:5.7
+        ports:
+        - 3306
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        bundler-cache: true
+    - run: bundle install
+
+    - name: Setup Node
+      uses: actions/setup-node@v2
+
+    - name: Yarn cache dir path
+      id: yarn-cache-dir-path
+      run: echo "::set-output name=dir::$(yarn cache dir)"
+
+    - name: Yarn cache
+      id: yarn-cache
+      uses: actions/cache@v2
+      with:
+        path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+        key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-yarn-
+
+    - name: Yarn install
+      run: yarn install
+
+    - name: Run RSpec unit tests
+      env:
+        RAILS_ENV: test
+        DATABASE_URL: mysql2://root:root@127.0.0.1/supergold_rails_test
+        MYSQL_PORT: "${{ job.services.mysql.ports['3306'] }}"
+        RAILS_MASTER_KEY: ${{ secrets.MASTER_KEY }}
+        API_PUBLIC_KEY: webapiuser
+        API_SECRET_KEY: ${{secrets.API_SECRET_KEY}}
+        TZ: Pacific/Auckland
+      run: |
+        RAILS_ENV=test bundle exec rails db:create db:test:prepare
+        bundle exec rspec --force-color --fail-fast
+CODE
 
   # ______ Configure git and commit  _______
   git :init
